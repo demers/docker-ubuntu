@@ -78,9 +78,11 @@ RUN pip3 install pylint
 ENV PYTHONIOENCODING=utf-8
 
 # https://github.com/Shougo/deoplete.nvim
-RUN pip3 install --user pynvim
+RUN pip3 install pynvim
 
 #RUN curl -L https://raw.github.com/zaiste/vimified/master/install.sh | sh
+#RUN echo "curl -L https://raw.github.com/zaiste/vimified/master/install.sh | sh" >> ${WORKDIRECTORY}/.bash_profile
+
 
 RUN cd ${WORKDIRECTORY} \
     && git clone git://github.com/zaiste/vimified.git \
@@ -92,9 +94,13 @@ RUN cd ${WORKDIRECTORY} \
     && git clone https://github.com/gmarik/vundle.git bundle/vundle \
     && echo "let g:vimified_packages = ['general', 'coding', 'fancy', 'indent', 'css', 'os', 'ruby', 'js', 'haskell', 'python', 'color']" > local.vimrc
 
+RUN mkdir -p ${WORKDIRECTORY}/vimified/
+
 COPY after.vimrc ${WORKDIRECTORY}/vimified/
 
 COPY extra.vimrc ${WORKDIRECTORY}/vimified/
+
+RUN chown -R ubuntu:ubuntu ${WORKDIRECTORY}/vimified/
 
 # Générer les tags de ctags.
 RUN echo "ctags -f ${WORKDIRECTORY}/mytags -R ${WORKDIRECTORY}" >> ${WORKDIRECTORY}/.bash_profile
@@ -110,6 +116,8 @@ RUN echo "touch ~/.runonce_install" >> ${WORKDIRECTORY}/.bash_profile
 RUN echo "vim +BundleInstall +qall" >> ${WORKDIRECTORY}/.bash_profile
 RUN echo "fi" >> ${WORKDIRECTORY}/.bash_profile
 RUN echo "cd ~/" >> ${WORKDIRECTORY}/.bash_profile
+
+RUN chown -R ubuntu:ubuntu ${WORKDIRECTORY}/.bash_profile
 
 RUN apt -qy install gcc g++ make
 RUN apt install -y software-properties-common apt-transport-https wget
