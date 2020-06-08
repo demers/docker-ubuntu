@@ -1,5 +1,8 @@
 FROM ubuntu:18.04
 
+# Code pour VNC
+# https://github.com/codeworksio/docker-ubuntu-desktop
+
 MAINTAINER FND <fndemers@gmail.com>
 
 ENV PROJECTNAME=UBUNTU
@@ -8,14 +11,23 @@ ENV TERM=xterm\
     TZ=America/Toronto\
     DEBIAN_FRONTEND=noninteractive
 
-# Access SSH login
+# Access SSH et VNC login
 ENV USERNAME=ubuntu
+ENV SYSTEM_USER=ubuntu
 ENV PASSWORD=ubuntu
 
 ENV EMAIL="fndemers@gmail.com"
 ENV NAME="F.-Nicola Demers"
 
 ENV WORKDIRECTORY=/home/ubuntu
+
+# Venant de https://github.com/codeworksio/docker-ubuntu-desktop/blob/master/Dockerfile
+ARG APT_PROXY
+ARG APT_PROXY_SSL
+ENV VNC_DISPLAY=":1" \
+    VNC_RESOLUTION="1280x1024" \
+    VNC_COLOUR_DEPTH="24" \
+    VNC_PASSWORD="ubuntu"
 
 RUN apt-get update
 RUN apt install -y apt-utils vim-nox vim-gtk curl git nano psmisc
@@ -80,9 +92,6 @@ ENV PYTHONIOENCODING=utf-8
 # https://github.com/Shougo/deoplete.nvim
 RUN pip3 install pynvim
 
-#RUN curl -L https://raw.github.com/zaiste/vimified/master/install.sh | sh
-#RUN echo "curl -L https://raw.github.com/zaiste/vimified/master/install.sh | sh" >> ${WORKDIRECTORY}/.bash_profile
-
 
 RUN cd ${WORKDIRECTORY} \
     && git clone git://github.com/zaiste/vimified.git \
@@ -110,7 +119,7 @@ RUN echo "ctags -f ${WORKDIRECTORY}/mytags -R ${WORKDIRECTORY}" >> ${WORKDIRECTO
     #/path/to/myscript
 #fi
 
-# Compiling YouCompleteMe only once...
+# Compiling Vim plugins only once...
 RUN echo "if ! [ -f ~/.runonce_install ]; then" >> ${WORKDIRECTORY}/.bash_profile
 RUN echo "touch ~/.runonce_install" >> ${WORKDIRECTORY}/.bash_profile
 RUN echo "vim +BundleInstall +qall" >> ${WORKDIRECTORY}/.bash_profile
@@ -122,8 +131,50 @@ RUN chown -R ubuntu:ubuntu ${WORKDIRECTORY}/.bash_profile
 RUN apt -qy install gcc g++ make
 RUN apt install -y software-properties-common apt-transport-https wget
 
+RUN set -ex && \
+    \
+    # install system packages
+    if [ -n "$APT_PROXY" ]; then echo "Acquire::http { Proxy \"http://${APT_PROXY}\"; };" > /etc/apt/apt.conf.d/00proxy; fi && \
+    if [ -n "$APT_PROXY_SSL" ]; then echo "Acquire::https { Proxy \"https://${APT_PROXY_SSL}\"; };" > /etc/apt/apt.conf.d/00proxy; fi && \
+    apt-get --yes update && \
+    apt-get --yes upgrade && \
+    apt-get --yes install \
+        dbus-x11 \
+        tightvncserver \
+        xbase-clients \
+        xfce4 \
+        xfce4-terminal \
+        xfonts-100dpi \
+        xfonts-75dpi \
+        xfonts-base \
+        xfonts-scalable \
+    && \
+    # configure system user
+    echo "root:$VNC_PASSWORD" | chpasswd && \
+    mkdir -p /home/$SYSTEM_USER/.vnc && \
+    touch /home/$SYSTEM_USER/.Xresources && \
+    touch /home/$SYSTEM_USER/.Xauthority && \
+    \
+    # SEE: https://github.com/stefaniuk/dotfiles
+    export USER_NAME=$SYSTEM_USER && \
+    export USER_EMAIL=${SYSTEM_USER}@local && \
+    curl -L https://raw.githubusercontent.com/stefaniuk/dotfiles/master/dotfiles -o - | /bin/bash -s -- \
+        --directory=/home/$SYSTEM_USER \
+    && \
+    # configure system user
+    chown -R $SYSTEM_USER:$SYSTEM_USER /home/$SYSTEM_USER && \
+    chsh -s /bin/bash $SYSTEM_USER && \
+    \
+    rm -rf /tmp/* /var/tmp/* /var/lib/apt/lists/* /var/cache/apt/* && \
+    rm -f /etc/apt/apt.conf.d/00proxy
+
+COPY init.sh /
+RUN chmod a+x /init.sh
+
+EXPOSE 5901-5999
+
 # AJOUTER_ICI
 
 # Start SSHD server...
-CMD ["/usr/sbin/sshd", "-D"]
-
+#CMD ["/usr/sbin/sshd", "-D"]
+CMD [ "/init.sh" ]
