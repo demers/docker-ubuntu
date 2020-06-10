@@ -117,11 +117,6 @@ RUN chown -R ubuntu:ubuntu ${WORKDIRECTORY}/vimified/
 # Générer les tags de ctags.
 RUN echo "ctags -f ${WORKDIRECTORY}/mytags -R ${WORKDIRECTORY}" >> ${WORKDIRECTORY}/.bash_profile
 
-#if ! [ -f /run/user/$UID/runonce_myscript ]; then
-    #touch /run/user/$UID/runonce_myscript
-    #/path/to/myscript
-#fi
-
 # Compiling Vim plugins only once...
 RUN echo "if ! [ -f ~/.runonce_install ]; then" >> ${WORKDIRECTORY}/.bash_profile
 RUN echo "touch ~/.runonce_install" >> ${WORKDIRECTORY}/.bash_profile
@@ -165,6 +160,7 @@ RUN set -ex && \
     touch /home/$SYSTEM_USER/.Xresources && \
     touch /home/$SYSTEM_USER/.Xauthority && \
     \
+    # SEE: https://github.com/stefaniuk/dotfiles
     export USER_NAME=$SYSTEM_USER && \
     export USER_EMAIL=${USER_EMAIL} && \
     # configure system user
