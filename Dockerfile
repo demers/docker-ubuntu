@@ -141,9 +141,6 @@ RUN echo "fi" >> ${WORKDIRECTORY}/.bash_profile
 
 RUN echo "cd ~/" >> ${WORKDIRECTORY}/.bash_profile
 
-#RUN chown -R ubuntu:ubuntu ${WORKDIRECTORY}/.bash_profile
-
-
 RUN apt -qy install gcc g++ make
 RUN apt install -y software-properties-common apt-transport-https wget
 
@@ -165,27 +162,15 @@ RUN set -ex && \
         xfonts-base \
         xfonts-scalable \
     && \
-    # configure system user
-    #echo "root:$VNC_PASSWORD" | chpasswd && \
-    #mkdir -p /home/$SYSTEM_USER/.vnc && \
     touch /home/$SYSTEM_USER/.Xresources && \
     touch /home/$SYSTEM_USER/.Xauthority && \
     \
-    # SEE: https://github.com/stefaniuk/dotfiles
     export USER_NAME=$SYSTEM_USER && \
     export USER_EMAIL=${USER_EMAIL} && \
-    #curl -L https://raw.githubusercontent.com/stefaniuk/dotfiles/master/dotfiles -o - | /bin/bash -s -- \
-        #--directory=/home/$SYSTEM_USER \
-    #&& \
     # configure system user
     chown -R $SYSTEM_USER:$SYSTEM_USER /home/$SYSTEM_USER && \
-    #chsh -s /bin/bash $SYSTEM_USER && \
-    #\
     rm -rf /tmp/* /var/tmp/* /var/lib/apt/lists/* /var/cache/apt/* && \
     rm -f /etc/apt/apt.conf.d/00proxy
-
-#COPY init.sh /
-#RUN chmod a+x /init.sh
 
 EXPOSE 5901-5999
 
@@ -193,5 +178,3 @@ EXPOSE 5901-5999
 
 # Start SSHD server...
 CMD ["/usr/sbin/sshd", "-D"]
-#CMD [ "/init.sh" ]
-#CMD [ "sudo -H -u ubuntu /init.sh" ]
