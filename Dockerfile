@@ -13,10 +13,10 @@ ENV TERM=xterm\
 
 # Access SSH et VNC login
 ENV USERNAME=ubuntu
-ENV SYSTEM_USER=ubuntu
+ENV SYSTEM_USER=$USERNAME
 ENV PASSWORD=ubuntu
 
-ENV EMAIL="fndemers@gmail.com"
+ENV USER_EMAIL="fndemers@gmail.com"
 ENV NAME="F.-Nicola Demers"
 
 ENV WORKDIRECTORY=/home/ubuntu
@@ -30,6 +30,8 @@ ENV VNC_DISPLAY=":1" \
     VNC_PASSWORD="ubuntu"
 
 RUN apt-get update
+RUN apt-get --yes upgrade
+
 RUN apt install -y apt-utils vim-nox vim-gtk curl git nano psmisc
 RUN apt-get install -y exuberant-ctags
 RUN apt-get update
@@ -54,12 +56,13 @@ RUN apt install -y jed httpie ranger tmux tree fish
 
 RUN echo "export PS1=\"\\e[0;31m $PROJECTNAME\\e[m \$PS1\"" >> ${WORKDIRECTORY}/.bash_profile
 
-RUN echo "git config --global user.email '$EMAIL'" >> ${WORKDIRECTORY}/.bash_profile
+RUN echo "git config --global user.email '$USER_EMAIL'" >> ${WORKDIRECTORY}/.bash_profile
 RUN echo "git config --global user.name '$NAME'" >> ${WORKDIRECTORY}/.bash_profile
 
 # Ajout des droits sudoers
 RUN apt-get install -y sudo
-RUN echo "%ubuntu ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+#RUN echo "%ubuntu ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+RUN echo "%$USERNAME ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 RUN echo "export DISPLAY=:0.0" >> ${WORKDIRECTORY}/.bash_profile
 RUN echo "export DISPLAY=:0.0" >> /root/.bash_profile
@@ -123,10 +126,23 @@ RUN echo "ctags -f ${WORKDIRECTORY}/mytags -R ${WORKDIRECTORY}" >> ${WORKDIRECTO
 RUN echo "if ! [ -f ~/.runonce_install ]; then" >> ${WORKDIRECTORY}/.bash_profile
 RUN echo "touch ~/.runonce_install" >> ${WORKDIRECTORY}/.bash_profile
 RUN echo "vim +BundleInstall +qall" >> ${WORKDIRECTORY}/.bash_profile
+
+# Configuration de VNC
+RUN echo "umask 0077" >> ${WORKDIRECTORY}/.bash_profile
+RUN echo "mkdir -p \$HOME/.vnc" >> ${WORKDIRECTORY}/.bash_profile
+RUN echo "chmod go-rwx \$HOME/.vnc" >> ${WORKDIRECTORY}/.bash_profile
+RUN echo "vncpasswd -f <<< $VNC_PASSWORD > \$HOME/.vnc/passwd" >> ${WORKDIRECTORY}/.bash_profile
+RUN echo "vncserver -kill :1 > /dev/null 2>&1 ||: " >> ${WORKDIRECTORY}/.bash_profile
+RUN echo "rm -rf /tmp/.X*" >> ${WORKDIRECTORY}/.bash_profile
+RUN echo "rm -f \$HOME/.vnc/*.log" >> ${WORKDIRECTORY}/.bash_profile
+RUN echo "USER=$SYSTEM_USER vncserver $VNC_DISPLAY -geometry $VNC_RESOLUTION -depth $VNC_COLOUR_DEPTH" >> ${WORKDIRECTORY}/.bash_profile
+
 RUN echo "fi" >> ${WORKDIRECTORY}/.bash_profile
+
 RUN echo "cd ~/" >> ${WORKDIRECTORY}/.bash_profile
 
-RUN chown -R ubuntu:ubuntu ${WORKDIRECTORY}/.bash_profile
+#RUN chown -R ubuntu:ubuntu ${WORKDIRECTORY}/.bash_profile
+
 
 RUN apt -qy install gcc g++ make
 RUN apt install -y software-properties-common apt-transport-https wget
@@ -150,31 +166,32 @@ RUN set -ex && \
         xfonts-scalable \
     && \
     # configure system user
-    echo "root:$VNC_PASSWORD" | chpasswd && \
-    mkdir -p /home/$SYSTEM_USER/.vnc && \
+    #echo "root:$VNC_PASSWORD" | chpasswd && \
+    #mkdir -p /home/$SYSTEM_USER/.vnc && \
     touch /home/$SYSTEM_USER/.Xresources && \
     touch /home/$SYSTEM_USER/.Xauthority && \
     \
     # SEE: https://github.com/stefaniuk/dotfiles
     export USER_NAME=$SYSTEM_USER && \
-    export USER_EMAIL=${SYSTEM_USER}@local && \
-    curl -L https://raw.githubusercontent.com/stefaniuk/dotfiles/master/dotfiles -o - | /bin/bash -s -- \
-        --directory=/home/$SYSTEM_USER \
-    && \
+    export USER_EMAIL=${USER_EMAIL} && \
+    #curl -L https://raw.githubusercontent.com/stefaniuk/dotfiles/master/dotfiles -o - | /bin/bash -s -- \
+        #--directory=/home/$SYSTEM_USER \
+    #&& \
     # configure system user
     chown -R $SYSTEM_USER:$SYSTEM_USER /home/$SYSTEM_USER && \
-    chsh -s /bin/bash $SYSTEM_USER && \
-    \
+    #chsh -s /bin/bash $SYSTEM_USER && \
+    #\
     rm -rf /tmp/* /var/tmp/* /var/lib/apt/lists/* /var/cache/apt/* && \
     rm -f /etc/apt/apt.conf.d/00proxy
 
-COPY init.sh /
-RUN chmod a+x /init.sh
+#COPY init.sh /
+#RUN chmod a+x /init.sh
 
 EXPOSE 5901-5999
 
 # AJOUTER_ICI
 
 # Start SSHD server...
-#CMD ["/usr/sbin/sshd", "-D"]
-CMD [ "/init.sh" ]
+CMD ["/usr/sbin/sshd", "-D"]
+#CMD [ "/init.sh" ]
+#CMD [ "sudo -H -u ubuntu /init.sh" ]
