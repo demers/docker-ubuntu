@@ -127,14 +127,19 @@ RUN echo "umask 0077" >> ${WORKDIRECTORY}/.bash_profile
 RUN echo "mkdir -p \$HOME/.vnc" >> ${WORKDIRECTORY}/.bash_profile
 RUN echo "chmod go-rwx \$HOME/.vnc" >> ${WORKDIRECTORY}/.bash_profile
 RUN echo "vncpasswd -f <<< $VNC_PASSWORD > \$HOME/.vnc/passwd" >> ${WORKDIRECTORY}/.bash_profile
+
+RUN echo "fi" >> ${WORKDIRECTORY}/.bash_profile
+
+# Vérifier si le serveur VNC roule, sinon, le démarrer.
+RUN echo "if [ ! \$(pgrep -x 'Xtightvnc') ] >/dev/null" >> ${WORKDIRECTORY}/.bash_profile
+RUN echo "then" >> ${WORKDIRECTORY}/.bash_profile
 RUN echo "vncserver -kill :1 > /dev/null 2>&1 ||: " >> ${WORKDIRECTORY}/.bash_profile
 RUN echo "rm -rf /tmp/.X*" >> ${WORKDIRECTORY}/.bash_profile
 RUN echo "rm -f \$HOME/.vnc/*.log" >> ${WORKDIRECTORY}/.bash_profile
 RUN echo "USER=$SYSTEM_USER vncserver $VNC_DISPLAY -geometry $VNC_RESOLUTION -depth $VNC_COLOUR_DEPTH" >> ${WORKDIRECTORY}/.bash_profile
-
 RUN echo "fi" >> ${WORKDIRECTORY}/.bash_profile
 
-RUN echo "cd ~/" >> ${WORKDIRECTORY}/.bash_profile
+#RUN echo "cd ~/" >> ${WORKDIRECTORY}/.bash_profile
 
 RUN apt -qy install gcc g++ make
 RUN apt install -y software-properties-common apt-transport-https wget
