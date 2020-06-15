@@ -32,6 +32,12 @@ ENV VNC_DISPLAY=":1" \
 RUN apt-get update
 RUN apt-get --yes upgrade
 
+# Installation de la commande ping
+RUN apt-get install -y iputils-ping
+
+# Installation htop
+RUN apt-get install -y iputils-ping
+
 RUN apt install -y apt-utils vim-nox vim-gtk curl git nano psmisc
 RUN apt-get install -y exuberant-ctags
 RUN apt-get update
@@ -79,6 +85,12 @@ EXPOSE 22
 
 # Installation X11.
 RUN apt install -y xauth vim-gtk
+
+# Corriger l'affichage X11
+# https://stackoverflow.com/questions/48210972/xlib-extension-xinputextension-missing-on-display-1-atom-ubuntu
+RUN cd /usr/lib/x86_64-linux-gnu/ && \
+    cp libxcb.so.1 libxcb.so.1.bak && \
+    sed -i 's/BIG-REQUESTS/_IG-REQUESTS/' libxcb.so.1
 
 RUN apt-get update
 RUN apt-get install -y build-essential cmake
