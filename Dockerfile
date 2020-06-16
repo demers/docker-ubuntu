@@ -142,6 +142,15 @@ RUN echo "vncpasswd -f <<< $VNC_PASSWORD > \$HOME/.vnc/passwd" >> ${WORKDIRECTOR
 
 RUN echo "fi" >> ${WORKDIRECTORY}/.bash_profile
 
+RUN echo "export SYSTEM_USER=$USERNAME" >> ${WORKDIRECTORY}/.bash_profile
+RUN echo 'export VNC_DISPLAY=":1"' >> ${WORKDIRECTORY}/.bash_profile
+RUN echo 'export VNC_RESOLUTION="1280x1024"' >> ${WORKDIRECTORY}/.bash_profile
+RUN echo 'export VNC_COLOUR_DEPTH="24"' >> ${WORKDIRECTORY}/.bash_profile
+RUN echo 'export VNC_PASSWORD="ubuntu"' >> ${WORKDIRECTORY}/.bash_profile
+RUN echo 'export vncstart="USER=$SYSTEM_USER vncserver $VNC_DISPLAY -geometry $VNC_RESOLUTION -depth $VNC_COLOUR_DEPTH"' >> ${WORKDIRECTORY}/.bash_profile
+RUN echo "export vnckill='vncserver -kill :1 > /dev/null 2>&1 ||:'" >> ${WORKDIRECTORY}/.bash_profile
+
+
 # Vérifier si le serveur VNC roule, sinon, le démarrer.
 RUN echo "if [ ! \$(pgrep -x 'Xtightvnc') ] >/dev/null" >> ${WORKDIRECTORY}/.bash_profile
 RUN echo "then" >> ${WORKDIRECTORY}/.bash_profile
