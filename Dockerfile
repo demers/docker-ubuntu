@@ -36,7 +36,7 @@ RUN apt-get --yes upgrade
 RUN apt-get install -y iputils-ping
 
 # Installation htop
-RUN apt-get install -y iputils-ping
+RUN apt-get install -y htop
 
 RUN apt install -y apt-utils vim-nox vim-gtk curl git nano psmisc
 RUN apt-get install -y exuberant-ctags
