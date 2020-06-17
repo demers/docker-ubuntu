@@ -27,7 +27,7 @@ ARG APT_PROXY_SSL
 ENV VNC_DISPLAY=":1" \
     VNC_RESOLUTION="1280x1024" \
     VNC_COLOUR_DEPTH="24" \
-    VNC_PASSWORD="ubuntu"
+    VNC_PASSWORD="$PASSWORD"
 
 RUN apt-get update
 RUN apt-get --yes upgrade
@@ -67,7 +67,6 @@ RUN echo "git config --global user.name '$NAME'" >> ${WORKDIRECTORY}/.bash_profi
 
 # Ajout des droits sudoers
 RUN apt-get install -y sudo
-#RUN echo "%ubuntu ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 RUN echo "%$USERNAME ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 RUN echo "export DISPLAY=:0.0" >> ${WORKDIRECTORY}/.bash_profile
@@ -124,7 +123,7 @@ COPY after.vimrc ${WORKDIRECTORY}/vimified/
 
 COPY extra.vimrc ${WORKDIRECTORY}/vimified/
 
-RUN chown -R ubuntu:ubuntu ${WORKDIRECTORY}/vimified/
+RUN chown -R $USERNAME:$PASSWORD ${WORKDIRECTORY}/vimified/
 
 # Générer les tags de ctags.
 RUN echo "ctags -f ${WORKDIRECTORY}/mytags -R ${WORKDIRECTORY}" >> ${WORKDIRECTORY}/.bash_profile
@@ -146,7 +145,7 @@ RUN echo "export SYSTEM_USER=$USERNAME" >> ${WORKDIRECTORY}/.bash_profile
 RUN echo 'export VNC_DISPLAY=":1"' >> ${WORKDIRECTORY}/.bash_profile
 RUN echo 'export VNC_RESOLUTION="1280x1024"' >> ${WORKDIRECTORY}/.bash_profile
 RUN echo 'export VNC_COLOUR_DEPTH="24"' >> ${WORKDIRECTORY}/.bash_profile
-RUN echo 'export VNC_PASSWORD="ubuntu"' >> ${WORKDIRECTORY}/.bash_profile
+RUN echo 'export VNC_PASSWORD="$USERNAME"' >> ${WORKDIRECTORY}/.bash_profile
 RUN echo 'alias vncstart="USER=$SYSTEM_USER vncserver $VNC_DISPLAY -geometry $VNC_RESOLUTION -depth $VNC_COLOUR_DEPTH"' >> ${WORKDIRECTORY}/.bash_profile
 RUN echo "alias vnckill='vncserver -kill :1 > /dev/null 2>&1 ||:'" >> ${WORKDIRECTORY}/.bash_profile
 
