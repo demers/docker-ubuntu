@@ -50,7 +50,6 @@ RUN /usr/bin/ssh-keygen -A
 
 # Add user to the image
 RUN adduser --quiet --disabled-password --shell /bin/bash --home ${WORKDIRECTORY} --gecos "User" ${USERNAME}
-# Set password for the jenkins user (you may want to alter this).
 RUN echo "$USERNAME:$PASSWORD" | chpasswd
 
 RUN apt-get clean && apt-get -y update && apt-get install -y locales && locale-gen fr_CA.UTF-8
