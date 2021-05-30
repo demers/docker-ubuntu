@@ -57,7 +57,7 @@ ENV TZ=America/Toronto
 RUN unlink /etc/localtime
 RUN ln -s /usr/share/zoneinfo/$TZ /etc/localtime
 
-RUN apt install -y jed httpie ranger tmux tree fish
+RUN apt install -y jed httpie ranger tmux tree fish fzf
 
 RUN echo "export PS1=\"\\e[0;31m $PROJECTNAME\\e[m \$PS1\"" >> ${WORKDIRECTORY}/.bash_profile
 
@@ -122,7 +122,21 @@ COPY after.vimrc ${WORKDIRECTORY}/vimified/
 
 COPY extra.vimrc ${WORKDIRECTORY}/vimified/
 
+# Configuration Ranger
+RUN ranger --copy-config=all
+COPY rc.conf /tmp/
+COPY commands.py /tmp/
+RUN cat ${WORKDIRECTORY}/.config/ranger/rc.conf /tmp/rc.conf > ${WORKDIRECTORY}/.config/ranger/rc.conf
+RUN cat ${WORKDIRECTORY}/.config/ranger/commands.py /tmp/commands.py > ${WORKDIRECTORY}/.config/ranger/commands.py
+
 RUN chown -R $USERNAME:$PASSWORD ${WORKDIRECTORY}/vimified/
+
+RUN git clone https://github.com/Genivia/ugrep
+
+# Installation de ugrep
+RUN cd ugrep \
+    ./build.sh \
+    make install
 
 # Générer les tags de ctags.
 RUN echo "ctags -f ${WORKDIRECTORY}/mytags -R ${WORKDIRECTORY}" >> ${WORKDIRECTORY}/.bash_profile
