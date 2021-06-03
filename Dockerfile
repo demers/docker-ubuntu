@@ -1,4 +1,5 @@
-FROM ubuntu:18.04
+#FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 # Code pour VNC
 # https://github.com/codeworksio/docker-ubuntu-desktop
@@ -124,6 +125,8 @@ COPY extra.vimrc ${WORKDIRECTORY}/vimified/
 
 # Configuration Ranger
 RUN ranger --copy-config=all
+RUN mkdir ${WORKDIRECTORY}/.config
+RUN cp -v -f -r /root/.config/ranger ${WORKDIRECTORY}/.config/
 COPY rc.conf /tmp/
 COPY commands.py /tmp/
 RUN cat ${WORKDIRECTORY}/.config/ranger/rc.conf /tmp/rc.conf > ${WORKDIRECTORY}/.config/ranger/rc.conf
