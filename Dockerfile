@@ -1,4 +1,3 @@
-#FROM ubuntu:18.04
 FROM ubuntu:20.04
 
 # Code pour VNC
@@ -83,7 +82,7 @@ WORKDIR ${WORKDIRECTORY}
 EXPOSE 22
 
 # Installation X11.
-RUN apt install -y xauth vim-gtk
+RUN apt install -y xauth
 
 # Corriger l'affichage X11
 # https://stackoverflow.com/questions/48210972/xlib-extension-xinputextension-missing-on-display-1-atom-ubuntu
@@ -106,6 +105,8 @@ ENV PYTHONIOENCODING=utf-8
 # https://github.com/Shougo/deoplete.nvim
 RUN pip3 install pynvim
 
+# Installation VIM et Vimified
+RUN apt install -y vim-gtk
 
 RUN cd ${WORKDIRECTORY} \
     && git clone git://github.com/zaiste/vimified.git \
@@ -123,22 +124,28 @@ COPY after.vimrc ${WORKDIRECTORY}/vimified/
 
 COPY extra.vimrc ${WORKDIRECTORY}/vimified/
 
+RUN chown -R $USERNAME:$PASSWORD ${WORKDIRECTORY}/vimified/
+
+# Fin installation VIM
+
 # Configuration Ranger
 RUN ranger --copy-config=all
 RUN mkdir ${WORKDIRECTORY}/.config
 RUN cp -v -f -r /root/.config/ranger ${WORKDIRECTORY}/.config/
 COPY rc.conf /tmp/
 COPY commands.py /tmp/
-RUN cat ${WORKDIRECTORY}/.config/ranger/rc.conf /tmp/rc.conf > ${WORKDIRECTORY}/.config/ranger/rc.conf
-RUN cat ${WORKDIRECTORY}/.config/ranger/commands.py /tmp/commands.py > ${WORKDIRECTORY}/.config/ranger/commands.py
-
-RUN chown -R $USERNAME:$PASSWORD ${WORKDIRECTORY}/vimified/
-
-RUN git clone https://github.com/Genivia/ugrep
+RUN cat /tmp/rc.conf >> ${WORKDIRECTORY}/.config/ranger/rc.conf
+RUN cat /tmp/commands.py >> ${WORKDIRECTORY}/.config/ranger/commands.py
+RUN rm -f /tmp/rc.conf /tmp/commands.py
+RUN chown -R $USERNAME:$PASSWORD ${WORKDIRECTORY}/.config
 
 # Installation de ugrep
-RUN cd ugrep \
-    ./build.sh \
+RUN git clone https://github.com/Genivia/ugrep
+
+RUN apt install -y libz-dev
+
+RUN cd ${WORKDIRECTORY}/ugrep && \
+    ./build.sh && \
     make install
 
 # Générer les tags de ctags.
@@ -157,7 +164,7 @@ RUN echo "vncpasswd -f <<< $VNC_PASSWORD > \$HOME/.vnc/passwd" >> ${WORKDIRECTOR
 
 RUN echo "fi" >> ${WORKDIRECTORY}/.bash_profile
 
-RUN echo "export SYSTEM_USER=$USERNAME" >> ${WORKDIRECTORY}/.bash_profile
+RUN echo 'export SYSTEM_USER=$USERNAME' >> ${WORKDIRECTORY}/.bash_profile
 RUN echo 'export VNC_DISPLAY=":1"' >> ${WORKDIRECTORY}/.bash_profile
 RUN echo 'export VNC_RESOLUTION="1280x1024"' >> ${WORKDIRECTORY}/.bash_profile
 RUN echo 'export VNC_COLOUR_DEPTH="24"' >> ${WORKDIRECTORY}/.bash_profile

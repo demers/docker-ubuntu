@@ -2,7 +2,7 @@
 
 Voici le contenu de ce conteneur:
 
-* Ubuntu 18.04
+* Ubuntu 20.04
 * SSH
 * TightVNCServer
 * Vim avec Vimified
@@ -10,6 +10,8 @@ Voici le contenu de ce conteneur:
 * Httpie
 * Ranger
 * Tmux
+* FZF
+* ugrep
 * X11 pour l'exécution graphique avec SSH (*port forwarding*)
 * Interface XFCE 4 pour un démarrage graphique avec VNC
 

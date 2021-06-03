@@ -2,6 +2,7 @@ version: '2.1'
 
 services:
   ubuntu:
+    user: "1000:1000"
     build: .
     image: docker_ubuntu
     container_name: ubuntu
