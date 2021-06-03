@@ -19,6 +19,9 @@ ENV PASSWORD=ubuntu
 ENV USER_EMAIL="fndemers@gmail.com"
 ENV NAME="F.-Nicola Demers"
 
+ENV UID=1000
+ENV GID=1000
+
 ENV WORKDIRECTORY=/home/ubuntu
 
 # Venant de https://github.com/codeworksio/docker-ubuntu-desktop/blob/master/Dockerfile
@@ -49,7 +52,7 @@ RUN mkdir -p /var/run/sshd
 RUN /usr/bin/ssh-keygen -A
 
 # Add user to the image
-RUN adduser --quiet --disabled-password --shell /bin/bash --home ${WORKDIRECTORY} --gecos "User" ${USERNAME}
+RUN adduser --quiet --disabled-password --shell /bin/bash --home ${WORKDIRECTORY} --gecos "User" --uid $UID --gid $GID ${USERNAME}
 RUN echo "$USERNAME:$PASSWORD" | chpasswd
 
 RUN apt-get clean && apt-get -y update && apt-get install -y locales && locale-gen fr_CA.UTF-8
