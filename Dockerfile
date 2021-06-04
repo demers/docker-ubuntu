@@ -1,7 +1,7 @@
-FROM ubuntu:20.04
+FROM dorowu/ubuntu-desktop-lxde-vnc:focal
 
-# Code pour VNC
-# https://github.com/codeworksio/docker-ubuntu-desktop
+# Code VNC de:
+# https://github.com/fcwu/docker-ubuntu-vnc-desktop
 
 MAINTAINER FND <fndemers@gmail.com>
 
@@ -24,16 +24,12 @@ ENV GID=1000
 
 ENV WORKDIRECTORY=/home/ubuntu
 
-# Venant de https://github.com/codeworksio/docker-ubuntu-desktop/blob/master/Dockerfile
-ARG APT_PROXY
-ARG APT_PROXY_SSL
-ENV VNC_DISPLAY=":1" \
-    VNC_RESOLUTION="1280x1024" \
-    VNC_COLOUR_DEPTH="24" \
-    VNC_PASSWORD="$PASSWORD"
-
 RUN apt-get update
-RUN apt-get --yes upgrade
+#RUN apt-get --yes upgrade
+
+# Standard SSH port
+EXPOSE 6080
+EXPOSE 5900
 
 # Installation de la commande ping
 RUN apt-get install -y iputils-ping
@@ -52,6 +48,7 @@ RUN mkdir -p /var/run/sshd
 RUN /usr/bin/ssh-keygen -A
 
 # Add user to the image
+RUN groupadd -g 1000 ubuntu
 RUN adduser --quiet --disabled-password --shell /bin/bash --home ${WORKDIRECTORY} --gecos "User" --uid $UID --gid $GID ${USERNAME}
 RUN echo "$USERNAME:$PASSWORD" | chpasswd
 
@@ -80,18 +77,6 @@ RUN apt-get install -qy --no-install-recommends python-dev default-jdk
 
 
 WORKDIR ${WORKDIRECTORY}
-
-# Standard SSH port
-EXPOSE 22
-
-# Installation X11.
-RUN apt install -y xauth
-
-# Corriger l'affichage X11
-# https://stackoverflow.com/questions/48210972/xlib-extension-xinputextension-missing-on-display-1-atom-ubuntu
-RUN cd /usr/lib/x86_64-linux-gnu/ && \
-    cp libxcb.so.1 libxcb.so.1.bak && \
-    sed -i 's/BIG-REQUESTS/_IG-REQUESTS/' libxcb.so.1
 
 RUN apt-get update
 RUN apt-get install -y build-essential cmake
@@ -133,8 +118,6 @@ RUN chown -R $USERNAME:$PASSWORD ${WORKDIRECTORY}/vimified/
 
 # Configuration Ranger
 RUN ranger --copy-config=all
-RUN mkdir ${WORKDIRECTORY}/.config
-RUN cp -v -f -r /root/.config/ranger ${WORKDIRECTORY}/.config/
 COPY rc.conf /tmp/
 COPY commands.py /tmp/
 RUN cat /tmp/rc.conf >> ${WORKDIRECTORY}/.config/ranger/rc.conf
@@ -159,69 +142,18 @@ RUN echo "if ! [ -f ~/.runonce_install ]; then" >> ${WORKDIRECTORY}/.bash_profil
 RUN echo "touch ~/.runonce_install" >> ${WORKDIRECTORY}/.bash_profile
 RUN echo "vim +BundleInstall +qall" >> ${WORKDIRECTORY}/.bash_profile
 
-# Configuration de VNC
-RUN echo "umask 0077" >> ${WORKDIRECTORY}/.bash_profile
-RUN echo "mkdir -p \$HOME/.vnc" >> ${WORKDIRECTORY}/.bash_profile
-RUN echo "chmod go-rwx \$HOME/.vnc" >> ${WORKDIRECTORY}/.bash_profile
-RUN echo "vncpasswd -f <<< $VNC_PASSWORD > \$HOME/.vnc/passwd" >> ${WORKDIRECTORY}/.bash_profile
-
 RUN echo "fi" >> ${WORKDIRECTORY}/.bash_profile
-
-RUN echo 'export SYSTEM_USER=$USERNAME' >> ${WORKDIRECTORY}/.bash_profile
-RUN echo 'export VNC_DISPLAY=":1"' >> ${WORKDIRECTORY}/.bash_profile
-RUN echo 'export VNC_RESOLUTION="1280x1024"' >> ${WORKDIRECTORY}/.bash_profile
-RUN echo 'export VNC_COLOUR_DEPTH="24"' >> ${WORKDIRECTORY}/.bash_profile
-RUN echo 'export VNC_PASSWORD="$USERNAME"' >> ${WORKDIRECTORY}/.bash_profile
-RUN echo 'alias vncstart="USER=$SYSTEM_USER vncserver $VNC_DISPLAY -geometry $VNC_RESOLUTION -depth $VNC_COLOUR_DEPTH"' >> ${WORKDIRECTORY}/.bash_profile
-RUN echo "alias vnckill='vncserver -kill :1 > /dev/null 2>&1 ||:'" >> ${WORKDIRECTORY}/.bash_profile
-
-
-# Vérifier si le serveur VNC roule, sinon, le démarrer.
-RUN echo "if [ ! \$(pgrep -x 'Xtightvnc') ] >/dev/null" >> ${WORKDIRECTORY}/.bash_profile
-RUN echo "then" >> ${WORKDIRECTORY}/.bash_profile
-RUN echo "vncserver -kill :1 > /dev/null 2>&1 ||: " >> ${WORKDIRECTORY}/.bash_profile
-RUN echo "rm -rf /tmp/.X*" >> ${WORKDIRECTORY}/.bash_profile
-RUN echo "rm -f \$HOME/.vnc/*.log" >> ${WORKDIRECTORY}/.bash_profile
-RUN echo "USER=$SYSTEM_USER vncserver $VNC_DISPLAY -geometry $VNC_RESOLUTION -depth $VNC_COLOUR_DEPTH" >> ${WORKDIRECTORY}/.bash_profile
-RUN echo "fi" >> ${WORKDIRECTORY}/.bash_profile
-
-#RUN echo "cd ~/" >> ${WORKDIRECTORY}/.bash_profile
 
 RUN apt -qy install gcc g++ make
 RUN apt install -y software-properties-common apt-transport-https wget
 
-RUN set -ex && \
-    \
-    # install system packages
-    if [ -n "$APT_PROXY" ]; then echo "Acquire::http { Proxy \"http://${APT_PROXY}\"; };" > /etc/apt/apt.conf.d/00proxy; fi && \
-    if [ -n "$APT_PROXY_SSL" ]; then echo "Acquire::https { Proxy \"https://${APT_PROXY_SSL}\"; };" > /etc/apt/apt.conf.d/00proxy; fi && \
-    apt-get --yes update && \
-    apt-get --yes upgrade && \
-    apt-get --yes install \
-        dbus-x11 \
-        tightvncserver \
-        xbase-clients \
-        xfce4 \
-        xfce4-terminal \
-        xfonts-100dpi \
-        xfonts-75dpi \
-        xfonts-base \
-        xfonts-scalable \
-    && \
-    touch /home/$SYSTEM_USER/.Xresources && \
-    touch /home/$SYSTEM_USER/.Xauthority && \
-    \
-    # SEE: https://github.com/stefaniuk/dotfiles
-    export USER_NAME=$SYSTEM_USER && \
-    export USER_EMAIL=${USER_EMAIL} && \
-    # configure system user
-    chown -R $SYSTEM_USER:$SYSTEM_USER /home/$SYSTEM_USER && \
-    rm -rf /tmp/* /var/tmp/* /var/lib/apt/lists/* /var/cache/apt/* && \
-    rm -f /etc/apt/apt.conf.d/00proxy
-
-EXPOSE 5901-5999
 
 # AJOUTER_ICI
 
-# Start SSHD server...
-CMD ["/usr/sbin/sshd", "-D"]
+# Standard SSH port
+EXPOSE 22
+
+RUN sed -i '1 a service ssh start' /startup.sh
+
+# Start SSHD and /startup.sh (VNC) server...
+CMD ["/startup.sh"]

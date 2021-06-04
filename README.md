@@ -1,10 +1,12 @@
-# Ubuntu de base
+# Ubuntu de base avec VNC et SSH
+
+Basé sur https://github.com/fcwu/docker-ubuntu-vnc-desktop
 
 Voici le contenu de ce conteneur:
 
 * Ubuntu 20.04
-* SSH
-* TightVNCServer
+* VNCServer
+* LXDE/LxQT
 * Vim avec Vimified
 * Jed
 * Httpie
@@ -12,8 +14,7 @@ Voici le contenu de ce conteneur:
 * Tmux
 * FZF
 * ugrep
-* X11 pour l'exécution graphique avec SSH (*port forwarding*)
-* Interface XFCE 4 pour un démarrage graphique avec VNC
+*
 
 # Utilisation
 
@@ -40,9 +41,11 @@ poste hôte bien que Atom s'exécute dans le conteneur.
 ## Pour se connecter par VNC
 
 ```
-vncviewer localhost:5901
+vncviewer localhost:5900
 ```
 
-Le mot de passe est *ubuntu*
+Pas de mot de passe
+
+ou via un fureteur à l'adresse http://localhost:80
 
 

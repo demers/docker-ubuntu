@@ -2,17 +2,21 @@ version: '2.1'
 
 services:
   ubuntu:
-    #user: "1000:1000"
     build: .
     image: docker_ubuntu
     container_name: ubuntu
+    environment:
+      USER: ubuntu
+      PASSWORD: ubuntu
     volumes:
       - "data_work:/home/ubuntu/work"
       - "/home/demers/share:/home/ubuntu/share"
+      - "/dev/shm:/dev/shm"
     #restart: always
     ports:
       - "22:22"
-      - "5901:5901"
+      - "6080:80"
+      - "5900:5900"
     network_mode: "host"
 
 volumes:
