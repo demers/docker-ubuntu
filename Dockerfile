@@ -126,6 +126,9 @@ RUN rm -f /tmp/rc.conf /tmp/commands.py
 RUN chown -R $USERNAME:$PASSWORD ${WORKDIRECTORY}/.config
 RUN echo "export TERM=xterm" >> ${WORKDIRECTORY}/.bash_profile
 
+# Outils d'archivage
+RUN apt install -y libarchive-tools atool unrar rar
+
 # Installation de ugrep
 RUN git clone https://github.com/Genivia/ugrep
 
