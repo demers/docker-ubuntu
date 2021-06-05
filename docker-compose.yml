@@ -9,7 +9,7 @@ services:
       USER: ubuntu
       PASSWORD: ubuntu
     volumes:
-      - "data_work:/home/ubuntu/work"
+      - "data_work:/home/ubuntu"
       - "/home/demers/share:/home/ubuntu/share"
       - "/dev/shm:/dev/shm"
     #restart: always

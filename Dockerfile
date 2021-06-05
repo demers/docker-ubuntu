@@ -124,6 +124,7 @@ RUN cat /tmp/rc.conf >> ${WORKDIRECTORY}/.config/ranger/rc.conf
 RUN cat /tmp/commands.py >> ${WORKDIRECTORY}/.config/ranger/commands.py
 RUN rm -f /tmp/rc.conf /tmp/commands.py
 RUN chown -R $USERNAME:$PASSWORD ${WORKDIRECTORY}/.config
+RUN echo "export TERM=xterm" >> ${WORKDIRECTORY}/.bash_profile
 
 # Installation de ugrep
 RUN git clone https://github.com/Genivia/ugrep
